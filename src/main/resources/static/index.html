@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API Playground</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #fff;
+      --text: #1f2933;
+      --muted: #5c6b7a;
+      --line: #d9e2ec;
+      --accent: #1f6feb;
+      --accent-hover: #1158c7;
+      --ok: #0f7b3a;
+      --err: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    main {
+      max-width: 760px;
+      margin: 40px auto;
+      padding: 0 20px 48px;
+    }
+    h1 { margin: 0 0 8px; font-size: 1.6rem; }
+    .lede { color: var(--muted); margin: 0 0 24px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    select, input, textarea, button {
+      font: inherit;
+    }
+    select, input, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+    textarea { min-height: 88px; resize: vertical; }
+    .fields { display: grid; gap: 14px; margin-top: 16px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+    .url {
+      margin-top: 16px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.85rem;
+      color: var(--muted);
+      word-break: break-all;
+    }
+    .method {
+      display: inline-block;
+      font-weight: 700;
+      color: var(--accent);
+      margin-right: 6px;
+    }
+    .actions { margin-top: 16px; }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: var(--accent-hover); }
+    button:disabled { opacity: 0.6; cursor: wait; }
+    .meta { color: var(--muted); font-size: 0.85rem; margin: 0 0 10px; }
+    .meta.ok { color: var(--ok); }
+    .meta.err { color: var(--err); }
+    pre {
+      margin: 0;
+      background: #0f1720;
+      color: #e6edf3;
+      border-radius: 8px;
+      padding: 14px;
+      overflow: auto;
+      min-height: 140px;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>API Playground</h1>
+    <p class="lede">Select an endpoint, fill any parameters, then run it against this server.</p>
+
+    <section class="card">
+      <label for="endpoint">Endpoint</label>
+      <select id="endpoint"></select>
+      <div id="fields" class="fields"></div>
+      <p class="url"><span class="method" id="method"></span><span id="preview"></span></p>
+      <div class="actions">
+        <button id="run" type="button">Run</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <p class="meta" id="status">Response will appear here.</p>
+      <pre id="output">{}</pre>
+    </section>
+  </main>
+
+  <script>
+    const stations = [
+      ["HKO", "Hong Kong Observatory"],
+      ["SHA", "Sha Tin"],
+      ["TKL", "Ta Kwu Ling"],
+      ["KLT", "Kowloon City"],
+      ["KP", "King's Park"],
+      ["TW", "Tsuen Wan"],
+      ["TMS", "Tai Mo Shan"],
+      ["SSH", "Sheung Shui"],
+      ["WGL", "Waglan Island"],
+      ["VP1", "The Peak"],
+      ["TYW", "Pak Tam Chung"],
+      ["LFS", "Lau Fau Shan"]
+    ];
+
+    const endpoints = [
+      {
+        id: "hello",
+        method: "GET",
+        label: "GET /api/hello — Greeting",
+        path: "/api/hello",
+        query: ["name"],
+        fields: [{ name: "name", label: "Name", type: "text", value: "World" }]
+      },
+      {
+        id: "info",
+        method: "GET",
+        label: "GET /api/info — App info",
+        path: "/api/info",
+        fields: []
+      },
+      {
+        id: "echo",
+        method: "POST",
+        label: "POST /api/echo — Echo body",
+        path: "/api/echo",
+        fields: [{ name: "body", label: "Request body", type: "textarea", value: "hello from the playground" }]
+      },
+      {
+        id: "add",
+        method: "GET",
+        label: "GET /api/add — Sum a + b",
+        path: "/api/add",
+        query: ["a", "b"],
+        fields: [
+          { name: "a", label: "a", type: "number", value: "1" },
+          { name: "b", label: "b", type: "number", value: "2" }
+        ]
+      },
+      {
+        id: "greet",
+        method: "GET",
+        label: "GET /api/greet/{name} — Path greeting",
+        path: "/api/greet/{name}",
+        fields: [{ name: "name", label: "Name", type: "text", value: "Toby" }]
+      },
+      {
+        id: "time",
+        method: "GET",
+        label: "GET /api/time — Current time",
+        path: "/api/time",
+        fields: []
+      },
+      {
+        id: "health",
+        method: "GET",
+        label: "GET /actuator/health — Health check",
+        path: "/actuator/health",
+        fields: []
+      },
+      {
+        id: "weather",
+        method: "GET",
+        label: "GET /api/weather/{station} — Daily weather",
+        path: "/api/weather/{station}",
+        query: ["date", "dataType"],
+        fields: [
+          { name: "station", label: "Station", type: "station", value: "HKO" },
+          { name: "date", label: "Date", type: "date", value: "2024-09-05" },
+          {
+            name: "dataType",
+            label: "Data type",
+            type: "select",
+            value: "CLMTEMP",
+            options: [
+              ["CLMTEMP", "Daily mean temperature"],
+              ["CLMMAXT", "Daily maximum temperature"],
+              ["CLMMINT", "Daily minimum temperature"],
+              ["HHOT", "Hourly astronomical tides"],
+              ["SRS", "Sunrise / sunset"],
+              ["MRS", "Moonrise / moonset"],
+              ["LTMV", "10-minute mean visibility"],
+              ["RYES", "Weather and radiation report"]
+            ]
+          }
+        ]
+      },
+      {
+        id: "weather-current",
+        method: "GET",
+        label: "GET /api/weather/current/{station} — Live weather",
+        path: "/api/weather/current/{station}",
+        query: ["lang"],
+        fields: [
+          { name: "station", label: "Station", type: "station", value: "HKO" },
+          {
+            name: "lang",
+            label: "Language",
+            type: "select",
+            value: "en",
+            options: [["en", "English"], ["tc", "Traditional Chinese"], ["sc", "Simplified Chinese"]]
+          }
+        ]
+      },
+      {
+        id: "stations",
+        method: "GET",
+        label: "GET /api/weather/stations — Station list",
+        path: "/api/weather/stations",
+        fields: []
+      }
+    ];
+
+    const endpointEl = document.getElementById("endpoint");
+    const fieldsEl = document.getElementById("fields");
+    const methodEl = document.getElementById("method");
+    const previewEl = document.getElementById("preview");
+    const runEl = document.getElementById("run");
+    const statusEl = document.getElementById("status");
+    const outputEl = document.getElementById("output");
+
+    endpoints.forEach((ep, i) => {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = ep.label;
+      endpointEl.appendChild(opt);
+    });
+
+    function currentEndpoint() {
+      return endpoints[Number(endpointEl.value)];
+    }
+
+    function fieldValue(name) {
+      const el = document.getElementById("field-" + name);
+      return el ? el.value : "";
+    }
+
+    function buildRequest(ep) {
+      let path = ep.path;
+      (ep.fields || []).forEach((field) => {
+        path = path.replaceAll("{" + field.name + "}", encodeURIComponent(fieldValue(field.name)));
+      });
+      const params = new URLSearchParams();
+      (ep.query || []).forEach((name) => {
+        const value = fieldValue(name);
+        if (value !== "") params.set(name, value);
+      });
+      const query = params.toString();
+      return {
+        url: query ? path + "?" + query : path,
+        method: ep.method,
+        body: ep.method === "POST" ? fieldValue("body") : undefined
+      };
+    }
+
+    function renderSelect(field) {
+      const options = field.type === "station" ? stations : field.options;
+      return '<select id="field-' + field.name + '">' +
+        options.map(([value, label]) =>
+          '<option value="' + value + '"' + (value === field.value ? " selected" : "") + ">" +
+          value + " — " + label + "</option>"
+        ).join("") +
+        "</select>";
+    }
+
+    function renderField(field) {
+      const id = "field-" + field.name;
+      let control;
+      if (field.type === "textarea") {
+        control = '<textarea id="' + id + '">' + field.value + "</textarea>";
+      } else if (field.type === "select" || field.type === "station") {
+        control = renderSelect(field);
+      } else {
+        control = '<input id="' + id + '" type="' + field.type + '" value="' + field.value + '">';
+      }
+      return '<div><label for="' + id + '">' + field.label + "</label>" + control + "</div>";
+    }
+
+    function renderFields() {
+      const ep = currentEndpoint();
+      const html = (ep.fields || []).map(renderField);
+      if (ep.fields && ep.fields.length === 2 && ep.fields.every((f) => f.type === "number")) {
+        fieldsEl.innerHTML = '<div class="row">' + html.join("") + "</div>";
+      } else {
+        fieldsEl.innerHTML = html.join("");
+      }
+      fieldsEl.querySelectorAll("input, select, textarea").forEach((el) => {
+        el.addEventListener("input", updatePreview);
+        el.addEventListener("change", updatePreview);
+      });
+      updatePreview();
+    }
+
+    function updatePreview() {
+      const req = buildRequest(currentEndpoint());
+      methodEl.textContent = req.method;
+      previewEl.textContent = req.url;
+    }
+
+    async function run() {
+      const req = buildRequest(currentEndpoint());
+      runEl.disabled = true;
+      statusEl.className = "meta";
+      statusEl.textContent = "Running " + req.method + " " + req.url + " …";
+      const started = performance.now();
+      try {
+        const options = { method: req.method, headers: {} };
+        if (req.method === "POST") {
+          options.headers["Content-Type"] = "text/plain";
+          options.body = req.body || "";
+        }
+        const res = await fetch(req.url, options);
+        const text = await res.text();
+        const ms = Math.round(performance.now() - started);
+        let pretty = text;
+        try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch (_) {}
+        outputEl.textContent = pretty || "(empty response)";
+        statusEl.className = "meta " + (res.ok ? "ok" : "err");
+        statusEl.textContent = res.status + " " + res.statusText + " · " + ms + " ms";
+      } catch (err) {
+        statusEl.className = "meta err";
+        statusEl.textContent = "Request failed";
+        outputEl.textContent = String(err);
+      } finally {
+        runEl.disabled = false;
+      }
+    }
+
+    endpointEl.addEventListener("change", renderFields);
+    runEl.addEventListener("click", run);
+    renderFields();
+  </script>
+</body>
+</html>

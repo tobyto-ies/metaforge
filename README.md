@@ -15,7 +15,7 @@ mvn clean package -DskipTests
 ```bash
 java -jar target/springboot-api-sample-1.0.0.jar
 ```
-The service starts on **http://localhost:8080**.
+The service starts on **http://localhost:8090**.
 
 ## Endpoints
 | Method | Path                    | Description               |
@@ -56,16 +56,16 @@ information published by the Hong Kong Observatory (HKO) Open Data API
 ### Examples
 ```bash
 # Daily mean temperature at Hong Kong Observatory on 2024-09-05
-curl "http://localhost:8080/api/weather/HKO?date=2024-09-05"
+curl "http://localhost:8090/api/weather/HKO?date=2024-09-05"
 
 # Daily maximum temperature at Sha Tin on 2024-09-05
-curl "http://localhost:8080/api/weather/SHA?date=2024-09-05&dataType=CLMMAXT"
+curl "http://localhost:8090/api/weather/SHA?date=2024-09-05&dataType=CLMMAXT"
 
 # Real-time temperature / humidity at the Observatory
-curl "http://localhost:8080/api/weather/current/HKO"
+curl "http://localhost:8090/api/weather/current/HKO"
 
 # List all supported stations
-curl "http://localhost:8080/api/weather/stations"
+curl "http://localhost:8090/api/weather/stations"
 ```
 
 ### Supported station codes (subset)
