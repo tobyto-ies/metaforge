@@ -25,6 +25,7 @@ The service starts on **http://localhost:8080**.
 | POST   | `/api/echo`             | Echoes back the request body |
 | GET    | `/api/add?a=1&b=2`      | Returns the sum of `a + b` |
 | GET    | `/api/greet/{name}`     | Greeting with a path variable |
+| GET    | `/api/time`             | Current time (UTC, epoch, local) |
 | GET    | `/actuator/health`      | Spring Actuator health check |
 
 ## Weather API (HKO Open Data)

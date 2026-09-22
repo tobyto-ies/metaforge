@@ -63,4 +63,15 @@ public class DemoController {
         result.put("greeting", "Welcome back, " + name + "!");
         return result;
     }
+
+    /** Current time endpoint. */
+    @GetMapping("/time")
+    public Map<String, Object> time() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("serverTime", Instant.now().toString());
+        result.put("epochMillis", System.currentTimeMillis());
+        result.put("localTime", java.time.LocalDateTime.now().toString());
+        result.put("zone", java.time.ZoneId.systemDefault().toString());
+        return result;
+    }
 }
