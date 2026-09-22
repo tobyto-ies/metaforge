@@ -1,9 +1,9 @@
 # springboot-api-sample
 
-A minimal **Spring Boot 3.2 + Java 21** REST API sample, built with Maven.
+A minimal **Spring Boot 3.2 + Java 17** REST API sample, built with Maven.
 
 ## Requirements
-- JDK 21
+- JDK 17
 - Maven 3.8+
 
 ## Build
